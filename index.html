@@ -147,7 +147,7 @@ h1{font-size:15px;text-align:center;letter-spacing:1px;margin:0 0 3mm;color:#173
 .exercise-information{flex:1;min-width:0;font-size:8px;line-height:1.25}.exercise-information>div{padding-bottom:1mm;overflow-wrap:anywhere}.placeholder{color:#a5acb7}
 .compositions{border-top:1px solid #b8c6d7;padding-top:2mm;font-size:8.5px;margin-top:auto}.composition{padding-top:1mm;overflow-wrap:anywhere}.no-exercise{text-align:center;color:#64748b}.continued{font-size:11px}
 @media screen{.paper{max-width:none}}@media print{html,body{background:#fff;margin:0;padding:0}.paper{width:auto;min-height:${landscape?'194mm':'281mm'};margin:0;padding:0;box-shadow:none;break-after:page;page-break-after:always}.paper:last-child{break-after:auto;page-break-after:auto}.exercise-grid{gap:2.5mm}.exercise-card{overflow:visible}}
-</style></head><body>${pages}<script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script></body></html>`;
+</style></head><body>${pages}<script>if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));}<\/script></body></html>`;
 }
 function getPreviewFrame(){return document.getElementById('export-preview-frame')}
 let previewUpdateTimer=null;
@@ -244,4 +244,4 @@ document.getElementById('leave-cancel').onclick=()=>leaveDialog.close();
 window.addEventListener('beforeunload',event=>{if(isDirty()){event.preventDefault();event.returnValue=''}});
 document.getElementById('import').onchange=async ev=>{try{const f=ev.target.files[0];if(!f)return;const backup=JSON.parse(await f.text());const incoming=validateBackup(backup);if(confirm('Importer '+incoming.length+' séance(s)'+(backup.version===2?' et '+backup.library.length+' exercice(s) de bibliothèque':'')+' ? Les éléments ayant le même identifiant seront remplacés.')){const smap=new Map(sessions.map(s=>[s.id,s]));incoming.forEach(s=>smap.set(s.id,s));const nextSessions=[...smap.values()];let nextLibrary=library;if(backup.version===2){const lmap=new Map(library.map(e=>[e.id,e]));backup.library.forEach(e=>lmap.set(e.id,e));nextLibrary=[...lmap.values()]}const sOk=Store.save(nextSessions);const lOk=backup.version===2?LibraryStore.save(nextLibrary):true;if(sOk&&lOk){sessions=nextSessions;library=nextLibrary;home()}else alert('Import incomplet : stockage indisponible. Vérifie les autorisations du navigateur.')}
 }catch(e){alert('Import impossible : '+e.message)}finally{ev.target.value=''}};home();
-<CodeBlock language="html"><\/script></body></html></CodeBlock>
+</script></body></html>
