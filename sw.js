@@ -1,20 +1,57 @@
-// Coach Basket: cache pour démarrage hors ligne après première visite.
-const CACHE = 'coachbasket-static-v03-responsive-1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
+/* Coach Concept - Service Worker V0.4.2.9
+   Network-first for app files to prevent an older deployment from being pinned in cache.
+   Offline fallback retains a cached app shell. Does not touch localStorage, IndexedDB,
+   Supabase data, or cross-origin requests. */
+const CB_CACHE = 'coach-concept-shell-v0.4.2.9';
+const CB_PREFIX = 'coach-concept-shell-';
+const ASSETS = ['./', './index.html', './manifest.webmanifest'];
+
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
-  self.skipWaiting();
+ self.skipWaiting();
+ event.waitUntil((async () => {
+  const cache = await caches.open(CB_CACHE);
+  await Promise.allSettled(ASSETS.map(async path => {
+   try {
+    const response = await fetch(new Request(path, {cache: 'reload'}));
+    if(response.ok && response.type === 'basic') await cache.put(path, response);
+   } catch (_) { /* Offline: no interference with installation */ }
+  }));
+ })());
 });
+
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('coachbasket-static-') && k !== CACHE).map(k => caches.delete(k)))));
-  self.clients.claim();
+ event.waitUntil((async () => {
+  const names = await caches.keys();
+  await Promise.all(names.filter(name => name.startsWith(CB_PREFIX) && name !== CB_CACHE).map(name => caches.delete(name)));
+  await self.clients.claim();
+ })());
 });
+
 self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).catch(() => caches.match('./index.html')));
-    return;
+ const request = event.request;
+ if(request.method !== 'GET') return;
+ const url = new URL(request.url);
+ if(url.origin !== self.location.origin) return;
+ const path = url.pathname;
+ // Critical: always fetch version information and worker from network, never the app cache.
+ if(path.endsWith('/version.json') || path.endsWith('/sw.js')) {
+  event.respondWith(fetch(new Request(request, {cache: 'no-store'})));
+  return;
+ }
+ const isNavigation = request.mode === 'navigate';
+ const isShell = /\/(index\.html|manifest\.webmanifest|cloud-config\.js)$/.test(path);
+ if(!isNavigation && !isShell) return;
+ event.respondWith((async () => {
+  const cache = await caches.open(CB_CACHE);
+  const key = isNavigation ? './index.html' : path.endsWith('/index.html') ? './index.html' : path.endsWith('/manifest.webmanifest') ? './manifest.webmanifest' : './cloud-config.js';
+  try {
+   const fresh = await fetch(new Request(request, {cache: 'no-store'}));
+   if(fresh.ok && fresh.type === 'basic') await cache.put(key, fresh.clone());
+   return fresh;
+  } catch(err) {
+   const fallback = await cache.match(key);
+   if(fallback) return fallback;
+   throw err;
   }
-  event.respondWith(caches.match(req).then(cached => cached || fetch(req)));
+ })());
 });
