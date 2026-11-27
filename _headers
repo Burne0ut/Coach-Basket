@@ -1,0 +1,9 @@
+# Cloudflare Pages: keep version checks and app HTML fresh
+/version.json
+  Cache-Control: no-store, max-age=0
+/index.html
+  Cache-Control: no-cache, must-revalidate
+/
+  Cache-Control: no-cache, must-revalidate
+/sw.js
+  Cache-Control: no-cache, must-revalidate

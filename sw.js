@@ -1,8 +1,8 @@
-/* Coach Concept - Service Worker V0.4.2.9
+/* Coach Concept - Service Worker V0.5.6.4
    Network-first for app files to prevent an older deployment from being pinned in cache.
    Offline fallback retains a cached app shell. Does not touch localStorage, IndexedDB,
    Supabase data, or cross-origin requests. */
-const CB_CACHE = 'coach-concept-shell-v0.4.2.9';
+const CB_CACHE = 'coach-concept-shell-v0.5.6.4';
 const CB_PREFIX = 'coach-concept-shell-';
 const ASSETS = ['./', './index.html', './manifest.webmanifest'];
 
